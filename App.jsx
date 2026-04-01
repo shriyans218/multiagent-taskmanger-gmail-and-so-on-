@@ -6,7 +6,7 @@ const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
 // ─── System prompt ──────────────────────────────────────────────────────────
 const buildSystemPrompt = (tasks, gmailConnected, gmailProfile) => `
-You are APEX, a multi-agent productivity assistant. You coordinate two sub-agents:
+You are Aura, a multi-agent productivity assistant. You coordinate two sub-agents:
 - task_agent: manages an in-memory task list
 - email_agent: reads/sends Gmail via a local proxy (${gmailConnected ? `connected as ${gmailProfile}` : "NOT connected — user must connect Gmail first"})
 
@@ -72,7 +72,7 @@ export default function App() {
   const [gmailChecking, setGmailChecking] = useState(false);
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: "Hi, I'm **APEX** — your multi-agent assistant powered by Groq + Llama 3.3. I manage tasks and Gmail. Connect Gmail below to get started.",
+    content: "Hi, I'm **Aura** — your multi-agent assistant powered by Gemini 2.0 Flash. I manage tasks and Gmail. Connect Gmail below to get started.",
     agents: []
   }]);
   const [history, setHistory] = useState([]);
@@ -98,7 +98,6 @@ export default function App() {
 
   useEffect(() => { if (keySet) checkGmail(); }, [keySet, checkGmail]);
 
-  // Listen for OAuth popup completing
   useEffect(() => {
     const handler = (e) => { if (e.data === "gmail_connected") checkGmail(); };
     window.addEventListener("message", handler);
@@ -178,7 +177,6 @@ export default function App() {
 
       if (parsed.tasks !== undefined) setTasks(parsed.tasks);
 
-      // Execute any email_agent actions
       let emailContext = "";
       const actions = parsed.agent_actions || [];
       const agentNames = [...new Set(actions.map(a => a.agent).filter(Boolean))];
@@ -198,7 +196,6 @@ export default function App() {
         }
       }
 
-      // If we got email data back, do a follow-up Groq call to summarize it
       let finalMessage = parsed.message || raw;
       if (emailContext) {
         const followUp = await fetch(GROQ_URL, {
@@ -250,10 +247,10 @@ export default function App() {
       <div style={{ maxWidth: 460, margin: "40px auto", padding: "0 1rem", fontFamily: "var(--font-sans)" }}>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "28px 24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>A</div>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>Au</div>
             <div>
-              <div style={{ fontWeight: 500 }}>APEX</div>
-              <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Groq · Llama 3.3 70B · Gmail proxy</div>
+              <div style={{ fontWeight: 500 }}>Aura</div>
+              <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Gemini 2.0 Flash · Gmail proxy</div>
             </div>
           </div>
           <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginBottom: 16, lineHeight: 1.6 }}>
@@ -273,7 +270,7 @@ export default function App() {
             cursor: apiKey.startsWith("gsk_") ? "pointer" : "not-allowed",
             background: apiKey.startsWith("gsk_") ? "var(--color-text-primary)" : "var(--color-background-tertiary)",
             color: apiKey.startsWith("gsk_") ? "var(--color-background-primary)" : "var(--color-text-tertiary)"
-          }}>Launch APEX</button>
+          }}>Launch Aura</button>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 10, textAlign: "center", lineHeight: 1.5 }}>
             Your key is used only in this browser session and sent only to Groq's API.
           </p>
@@ -291,10 +288,10 @@ export default function App() {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>A</div>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>Au</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 500, fontSize: 15 }}>APEX</div>
-          <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Groq · Llama 3.3 70B</div>
+          <div style={{ fontWeight: 500, fontSize: 15 }}>Aura</div>
+          <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Gemini 2.0 Flash</div>
         </div>
 
         {/* Gmail connection status */}
@@ -387,7 +384,7 @@ export default function App() {
             </button>
           </div>
           {tasks.length === 0
-            ? <div style={{ textAlign: "center", padding: "50px 0", color: "var(--color-text-tertiary)", fontSize: 14 }}>No tasks yet — ask APEX in the chat tab.</div>
+            ? <div style={{ textAlign: "center", padding: "50px 0", color: "var(--color-text-tertiary)", fontSize: 14 }}>No tasks yet — ask Aura in the chat tab.</div>
             : tasks.map(t => (
               <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 6, border: "0.5px solid var(--color-border-tertiary)", borderRadius: 8, background: "var(--color-background-primary)", opacity: t.done ? 0.5 : 1, transition: "opacity 0.2s" }}>
                 <input type="checkbox" checked={t.done} onChange={() => toggleTask(t.id)} style={{ cursor: "pointer", flexShrink: 0 }} />
@@ -419,7 +416,7 @@ export default function App() {
               <button onClick={connectGmail} style={{ fontSize: 13, padding: "8px 20px", borderRadius: 8, border: "0.5px solid var(--color-border-info)", background: "var(--color-background-info)", color: "var(--color-text-info)", cursor: "pointer", fontWeight: 500 }}>Connect Gmail</button>
             </div>
           ) : emails.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "50px 0", color: "var(--color-text-tertiary)", fontSize: 14 }}>No emails loaded. Ask APEX to "check my emails" in chat.</div>
+            <div style={{ textAlign: "center", padding: "50px 0", color: "var(--color-text-tertiary)", fontSize: 14 }}>No emails loaded. Ask Aura to "check my emails" in chat.</div>
           ) : (
             emails.map((em, i) => (
               <div key={i} style={{ padding: "10px 14px", marginBottom: 6, border: "0.5px solid var(--color-border-tertiary)", borderRadius: 8, background: "var(--color-background-primary)", borderLeft: em.isUnread ? "3px solid #185FA5" : "0.5px solid var(--color-border-tertiary)" }}>
