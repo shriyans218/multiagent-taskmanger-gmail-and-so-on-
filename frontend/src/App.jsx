@@ -645,7 +645,8 @@ export default function App() {
             <div className="key-logo-mark">AP</div>
             <div className="key-logo-text">
               <div className="t1">APEX</div>
-              <div className="t2">groq · llama-3.3-70b · gmail</div>
+              {/* ── CHANGED: groq · llama-3.3-70b → gemini · gemini-2.0-flash ── */}
+              <div className="t2">gemini · gemini-2.0-flash · gmail</div>
             </div>
           </div>
           <p className="key-desc">Enter your Groq API key to launch. Get one free at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">console.groq.com</a>.</p>
@@ -707,7 +708,8 @@ export default function App() {
             <span className="topbar-meta">
               {view === "tasks" && `${pending} pending · ${tasks.filter(t => t.done).length} done`}
               {view === "emails" && `${emails.length} loaded · ${unread} unread`}
-              {view === "chat" && "groq · llama-3.3-70b"}
+              {/* ── CHANGED ── */}
+              {view === "chat" && "gemini · gemini-2.0-flash"}
             </span>
           </div>
 
