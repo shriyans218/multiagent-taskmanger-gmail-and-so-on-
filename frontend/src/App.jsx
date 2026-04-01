@@ -404,7 +404,7 @@ const css = `
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 const buildSystem = (tasks, gmailOk, gmailEmail) => `
-You are APEX, a multi-agent productivity assistant. You have two sub-agents:
+You are Aura, a multi-agent productivity assistant. You have two sub-agents:
 - task_agent: manages in-memory tasks
 - email_agent: reads/sends/deletes Gmail via local proxy (${gmailOk ? `connected as ${gmailEmail}` : "NOT connected"})
 
@@ -446,7 +446,7 @@ export default function App() {
   const [apiKey, setApiKey] = useState(envKey);
   const [keySet, setKeySet] = useState(!!envKey);
 
-  const [view, setView] = useState("chat"); // chat | tasks | emails
+  const [view, setView] = useState("chat");
   const [loading, setLoading] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [emails, setEmails] = useState([]);
@@ -459,7 +459,7 @@ export default function App() {
 
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: "Welcome to APEX. I manage your tasks and Gmail. Connect Gmail using the button below to get started.",
+    content: "Welcome to Aura. I manage your tasks and Gmail. Connect Gmail using the button below to get started.",
     agents: [],
     time: fmtTime()
   }]);
@@ -642,10 +642,10 @@ export default function App() {
       <div className="key-screen">
         <div className="key-card">
           <div className="key-logo">
-            <div className="key-logo-mark">AP</div>
+            <div className="key-logo-mark">Au</div>
             <div className="key-logo-text">
-              <div className="t1">APEX</div>
-              <div className="t2">groq · llama-3.3-70b · gmail</div>
+              <div className="t1">Aura</div>
+              <div className="t2">gemini 2.0 flash · gmail</div>
             </div>
           </div>
           <p className="key-desc">Enter your Groq API key to launch. Get one free at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">console.groq.com</a>.</p>
@@ -654,7 +654,7 @@ export default function App() {
             onKeyDown={e => e.key === "Enter" && apiKey.startsWith("gsk_") && setKeySet(true)} />
           <button className={`key-launch ${apiKey.startsWith("gsk_") ? "active" : "inactive"}`}
             onClick={() => setKeySet(true)} disabled={!apiKey.startsWith("gsk_")}>
-            Launch APEX
+            Launch Aura
           </button>
           <p className="key-note">Key is used only in this session — sent only to Groq's API.</p>
         </div>
@@ -669,8 +669,8 @@ export default function App() {
         {/* Sidebar */}
         <aside className="sidebar">
           <div className="logo">
-            <div className="logo-mark">AP</div>
-            <div className="logo-title">APEX</div>
+            <div className="logo-mark">Au</div>
+            <div className="logo-title">Aura</div>
             <div className="logo-sub">multi-agent assistant</div>
           </div>
 
@@ -707,7 +707,7 @@ export default function App() {
             <span className="topbar-meta">
               {view === "tasks" && `${pending} pending · ${tasks.filter(t => t.done).length} done`}
               {view === "emails" && `${emails.length} loaded · ${unread} unread`}
-              {view === "chat" && "groq · llama-3.3-70b"}
+              {view === "chat" && "gemini 2.0 flash"}
             </span>
           </div>
 
@@ -755,7 +755,7 @@ export default function App() {
                   <div className="input-row">
                     <input className="chat-input" value={input} onChange={e => setInput(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && send()}
-                      placeholder="Ask APEX anything — tasks, emails, actions..." />
+                      placeholder="Ask Aura anything — tasks, emails, actions..." />
                     <button className="send-btn" onClick={send} disabled={loading || !input.trim()}>Send →</button>
                   </div>
                 </div>
@@ -780,7 +780,7 @@ export default function App() {
                 {tasks.length === 0 ? (
                   <div className="empty-state">
                     <div className="em-icon">◻</div>
-                    no tasks yet — ask APEX in chat
+                    no tasks yet — ask Aura in chat
                   </div>
                 ) : (
                   <div className="task-list">
@@ -820,7 +820,7 @@ export default function App() {
                     <div className="empty-state" style={{ padding: "40px 20px" }}>
                       <div className="em-icon">◉</div>
                       no emails loaded<br />
-                      <span style={{ fontSize: 11, marginTop: 6, display: "block" }}>ask APEX to fetch emails in chat</span>
+                      <span style={{ fontSize: 11, marginTop: 6, display: "block" }}>ask Aura to fetch emails in chat</span>
                     </div>
                   ) : (
                     emails.map(em => (
