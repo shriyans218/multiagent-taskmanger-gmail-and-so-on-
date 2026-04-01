@@ -4,571 +4,166 @@ const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = "llama-3.3-70b-versatile";
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-const G = {
-  bg0: "#0c0c0e",
-  bg1: "#131316",
-  bg2: "#1a1a1f",
-  bg3: "#222228",
-  bg4: "#2a2a32",
-  border: "#2e2e38",
-  borderHover: "#44445a",
-  amber: "#f5a623",
-  amberDim: "#f5a62322",
-  amberBorder: "#f5a62344",
-  text0: "#f0f0f5",
-  text1: "#a0a0b8",
-  text2: "#606078",
-  text3: "#404055",
-  green: "#4ade80",
-  greenDim: "#4ade8022",
-  red: "#f87171",
-  redDim: "#f8717122",
-  blue: "#60a5fa",
-  blueDim: "#60a5fa22",
-};
-
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: ${G.bg0};
-    color: ${G.text0};
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    line-height: 1.6;
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: ${G.bg4}; border-radius: 2px; }
-
-  .app { display: flex; height: 100vh; }
-
-  /* Sidebar */
-  .sidebar {
-    width: 220px;
-    min-width: 220px;
-    background: ${G.bg1};
-    border-right: 1px solid ${G.border};
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-  }
-
-  .logo {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid ${G.border};
-  }
-  .logo-mark {
-    width: 32px; height: 32px;
-    background: ${G.amber};
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
-    font-weight: 500; font-size: 13px;
-    color: ${G.bg0};
-    margin-bottom: 10px;
-  }
-  .logo-title { font-size: 15px; font-weight: 500; color: ${G.text0}; letter-spacing: -0.3px; }
-  .logo-sub { font-size: 11px; color: ${G.text2}; font-family: 'DM Mono', monospace; margin-top: 1px; }
-
-  .nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
-  .nav-section { margin-bottom: 20px; }
-  .nav-label {
-    font-size: 10px; font-family: 'DM Mono', monospace;
-    color: ${G.text3}; letter-spacing: 1.5px; text-transform: uppercase;
-    padding: 0 10px; margin-bottom: 4px;
-  }
-  .nav-item {
-    display: flex; align-items: center; gap: 9px;
-    padding: 7px 10px; border-radius: 7px;
-    cursor: pointer; color: ${G.text1};
-    font-size: 13.5px; font-weight: 400;
-    transition: all 0.15s; border: 1px solid transparent;
-    position: relative;
-  }
-  .nav-item:hover { background: ${G.bg3}; color: ${G.text0}; }
-  .nav-item.active {
-    background: ${G.amberDim}; color: ${G.amber};
-    border-color: ${G.amberBorder};
-  }
-  .nav-item .icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
-  .nav-badge {
-    margin-left: auto;
-    background: ${G.amber}; color: ${G.bg0};
-    font-size: 10px; font-weight: 500;
-    font-family: 'DM Mono', monospace;
-    padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center;
-  }
-
-  .gmail-status {
-    padding: 12px 14px;
-    border-top: 1px solid ${G.border};
-    display: flex; align-items: center; gap: 8px;
-  }
-  .status-dot {
-    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-    transition: background 0.3s;
-  }
-  .status-text { font-size: 11px; color: ${G.text2}; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .status-btn {
-    font-size: 10px; padding: 3px 8px; border-radius: 5px; cursor: pointer;
-    font-family: 'DM Mono', monospace; border: 1px solid;
-    transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
-  }
-  .btn-connect { border-color: ${G.amberBorder}; color: ${G.amber}; background: ${G.amberDim}; }
-  .btn-connect:hover { background: ${G.amber}22; }
-  .btn-disconnect { border-color: ${G.border}; color: ${G.text2}; background: transparent; }
-  .btn-disconnect:hover { border-color: ${G.red}44; color: ${G.red}; }
-
-  /* Main content */
-  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-  .topbar {
-    padding: 14px 24px;
-    border-bottom: 1px solid ${G.border};
-    display: flex; align-items: center; gap: 12px;
-    background: ${G.bg1};
-  }
-  .topbar-title { font-size: 15px; font-weight: 500; color: ${G.text0}; flex: 1; }
-  .topbar-meta { font-size: 11px; color: ${G.text2}; font-family: 'DM Mono', monospace; }
-
-  .content { flex: 1; overflow: hidden; display: flex; }
-
-  /* ── Chat ── */
-  .chat-wrap { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-  .messages {
-    flex: 1; overflow-y: auto; padding: 20px 24px;
-    display: flex; flex-direction: column; gap: 16px;
-  }
-  .msg { display: flex; flex-direction: column; max-width: 75%; }
-  .msg.user { align-self: flex-end; align-items: flex-end; }
-  .msg.assistant { align-self: flex-start; align-items: flex-start; }
-
-  .msg-agent-row { display: flex; gap: 5px; margin-bottom: 5px; flex-wrap: wrap; }
-  .agent-chip {
-    font-size: 10px; font-family: 'DM Mono', monospace;
-    padding: 2px 7px; border-radius: 4px; font-weight: 400;
-    letter-spacing: 0.3px;
-  }
-  .chip-task { background: #4ade8018; color: #4ade80; border: 1px solid #4ade8030; }
-  .chip-email { background: #f5a62318; color: #f5a623; border: 1px solid #f5a62330; }
-
-  .msg-bubble {
-    padding: 10px 14px; border-radius: 10px;
-    font-size: 13.5px; line-height: 1.65;
-    border: 1px solid;
-  }
-  .msg.user .msg-bubble {
-    background: ${G.amber}; color: ${G.bg0};
-    border-color: ${G.amber}; font-weight: 400;
-    border-radius: 10px 10px 3px 10px;
-  }
-  .msg.assistant .msg-bubble {
-    background: ${G.bg2}; color: ${G.text0};
-    border-color: ${G.border};
-    border-radius: 10px 10px 10px 3px;
-  }
-  .msg-time { font-size: 10px; color: ${G.text3}; font-family: 'DM Mono', monospace; margin-top: 4px; padding: 0 2px; }
-
-  .typing {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 14px; background: ${G.bg2}; border: 1px solid ${G.border};
-    border-radius: 10px 10px 10px 3px; width: fit-content;
-    color: ${G.text2}; font-size: 12px;
-  }
-  .dots { display: flex; gap: 4px; }
-  .dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: ${G.text2};
-    animation: blink 1.2s infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink { 0%,100%{opacity:.2} 50%{opacity:1} }
-
-  .chat-footer {
-    padding: 16px 24px;
-    border-top: 1px solid ${G.border};
-    background: ${G.bg1};
-  }
-  .quick-prompts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-  .qp {
-    font-size: 11px; padding: 4px 10px; border-radius: 5px;
-    border: 1px solid ${G.border}; background: transparent;
-    color: ${G.text2}; cursor: pointer; font-family: 'DM Mono', monospace;
-    transition: all 0.15s;
-  }
-  .qp:hover { border-color: ${G.amberBorder}; color: ${G.amber}; background: ${G.amberDim}; }
-
-  .input-row { display: flex; gap: 8px; }
-  .chat-input {
-    flex: 1; padding: 10px 14px;
-    background: ${G.bg2}; border: 1px solid ${G.border};
-    border-radius: 8px; color: ${G.text0};
-    font-size: 13.5px; font-family: 'DM Sans', sans-serif;
-    outline: none; transition: border-color 0.15s;
-  }
-  .chat-input::placeholder { color: ${G.text3}; }
-  .chat-input:focus { border-color: ${G.amberBorder}; }
-  .send-btn {
-    padding: 10px 18px; border-radius: 8px; border: none;
-    background: ${G.amber}; color: ${G.bg0};
-    font-size: 13px; font-weight: 500; cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.15s; white-space: nowrap;
-  }
-  .send-btn:disabled { background: ${G.bg4}; color: ${G.text3}; cursor: not-allowed; }
-  .send-btn:not(:disabled):hover { background: #fbbf24; }
-
-  /* ── Tasks ── */
-  .panel { flex: 1; overflow-y: auto; padding: 20px 24px; }
-  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .stat-row { display: flex; gap: 10px; margin-bottom: 20px; }
-  .stat-card {
-    flex: 1; background: ${G.bg2}; border: 1px solid ${G.border};
-    border-radius: 8px; padding: 12px 16px; text-align: center;
-  }
-  .stat-num { font-size: 24px; font-weight: 400; font-family: 'DM Mono', monospace; }
-  .stat-lbl { font-size: 11px; color: ${G.text2}; margin-top: 2px; }
-
-  .add-btn {
-    font-size: 12px; padding: 6px 14px; border-radius: 6px;
-    border: 1px solid ${G.amberBorder}; background: ${G.amberDim};
-    color: ${G.amber}; cursor: pointer; font-family: 'DM Mono', monospace;
-    transition: all 0.15s;
-  }
-  .add-btn:hover { background: ${G.amber}33; }
-
-  .task-list { display: flex; flex-direction: column; gap: 6px; }
-  .task-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 14px; background: ${G.bg2};
-    border: 1px solid ${G.border}; border-radius: 8px;
-    transition: all 0.15s;
-  }
-  .task-item:hover { border-color: ${G.borderHover}; }
-  .task-item.done { opacity: 0.4; }
-  .task-cb { cursor: pointer; accent-color: ${G.amber}; width: 15px; height: 15px; flex-shrink: 0; }
-  .prio-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .task-title { flex: 1; font-size: 13.5px; }
-  .task-item.done .task-title { text-decoration: line-through; }
-  .task-due { font-size: 11px; color: ${G.text2}; font-family: 'DM Mono', monospace; }
-  .prio-badge {
-    font-size: 10px; padding: 2px 7px; border-radius: 4px;
-    font-family: 'DM Mono', monospace;
-  }
-  .prio-high { background: ${G.red}18; color: ${G.red}; border: 1px solid ${G.red}30; }
-  .prio-medium { background: ${G.amber}18; color: ${G.amber}; border: 1px solid ${G.amber}30; }
-  .prio-low { background: ${G.green}18; color: ${G.green}; border: 1px solid ${G.green}30; }
-  .del-btn {
-    border: none; background: none; color: ${G.text3};
-    cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1;
-    transition: color 0.15s;
-  }
-  .del-btn:hover { color: ${G.red}; }
-
-  .empty-state {
-    text-align: center; padding: 60px 0;
-    color: ${G.text3}; font-size: 13px;
-    font-family: 'DM Mono', monospace;
-  }
-  .empty-state .em-icon { font-size: 28px; margin-bottom: 10px; }
-
-  /* ── Emails ── */
-  .email-layout { display: flex; flex: 1; overflow: hidden; }
-  .email-list {
-    width: 360px; min-width: 360px;
-    border-right: 1px solid ${G.border};
-    overflow-y: auto;
-    display: flex; flex-direction: column;
-  }
-  .email-toolbar {
-    padding: 12px 16px;
-    border-bottom: 1px solid ${G.border};
-    display: flex; gap: 6px; align-items: center;
-    background: ${G.bg1}; flex-shrink: 0;
-  }
-  .toolbar-btn {
-    font-size: 11px; padding: 4px 10px; border-radius: 5px;
-    border: 1px solid ${G.border}; background: transparent;
-    color: ${G.text1}; cursor: pointer;
-    font-family: 'DM Mono', monospace; transition: all 0.15s;
-  }
-  .toolbar-btn:hover { border-color: ${G.borderHover}; color: ${G.text0}; }
-  .toolbar-btn.danger:hover { border-color: ${G.red}44; color: ${G.red}; background: ${G.redDim}; }
-
-  .email-item {
-    padding: 12px 16px; border-bottom: 1px solid ${G.border};
-    cursor: pointer; transition: background 0.12s;
-    position: relative;
-  }
-  .email-item:hover { background: ${G.bg2}; }
-  .email-item.selected { background: ${G.bg3}; border-left: 2px solid ${G.amber}; }
-  .email-item.unread .email-subject { font-weight: 500; color: ${G.text0}; }
-  .unread-bar {
-    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-    width: 3px; height: 60%; background: ${G.amber}; border-radius: 0 2px 2px 0;
-  }
-  .email-from { font-size: 12px; color: ${G.text1}; margin-bottom: 3px; display: flex; justify-content: space-between; }
-  .email-date-small { font-size: 10px; color: ${G.text3}; font-family: 'DM Mono', monospace; }
-  .email-subject { font-size: 13px; color: ${G.text1}; margin-bottom: 3px; }
-  .email-snippet { font-size: 11.5px; color: ${G.text2}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-  .email-detail {
-    flex: 1; overflow-y: auto; padding: 24px;
-    display: flex; flex-direction: column; gap: 16px;
-  }
-  .email-detail-header {
-    padding-bottom: 16px; border-bottom: 1px solid ${G.border};
-  }
-  .detail-subject { font-size: 17px; font-weight: 500; color: ${G.text0}; margin-bottom: 10px; line-height: 1.4; }
-  .detail-meta { display: flex; flex-direction: column; gap: 4px; }
-  .detail-meta-row { display: flex; gap: 8px; font-size: 12px; }
-  .detail-meta-label { color: ${G.text3}; font-family: 'DM Mono', monospace; width: 40px; flex-shrink: 0; }
-  .detail-meta-val { color: ${G.text1}; }
-  .detail-body {
-    font-size: 13.5px; color: ${G.text1}; line-height: 1.75;
-    white-space: pre-wrap; word-break: break-word;
-  }
-  .detail-actions { display: flex; gap: 8px; }
-  .action-btn {
-    font-size: 12px; padding: 6px 14px; border-radius: 6px;
-    border: 1px solid ${G.border}; background: transparent;
-    color: ${G.text1}; cursor: pointer; font-family: 'DM Mono', monospace;
-    transition: all 0.15s;
-  }
-  .action-btn:hover { border-color: ${G.borderHover}; color: ${G.text0}; }
-  .action-btn.del:hover { border-color: ${G.red}44; color: ${G.red}; background: ${G.redDim}; }
-  .action-btn.reply:hover { border-color: ${G.amberBorder}; color: ${G.amber}; background: ${G.amberDim}; }
-
-  .no-email-selected {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 10px; color: ${G.text3};
-    font-family: 'DM Mono', monospace; font-size: 13px;
-  }
-
-  /* Loading spinner */
-  .spin {
-    width: 14px; height: 14px; border-radius: 50%;
-    border: 2px solid ${G.bg4}; border-top-color: ${G.amber};
-    animation: spin 0.7s linear infinite; flex-shrink: 0;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Key screen */
-  .key-screen {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: ${G.bg0};
-  }
-  .key-card {
-    width: 400px; background: ${G.bg1};
-    border: 1px solid ${G.border}; border-radius: 12px;
-    padding: 32px;
-  }
-  .key-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-  .key-logo-mark {
-    width: 40px; height: 40px; background: ${G.amber}; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace; font-weight: 500; font-size: 14px; color: ${G.bg0};
-  }
-  .key-logo-text .t1 { font-size: 16px; font-weight: 500; color: ${G.text0}; }
-  .key-logo-text .t2 { font-size: 11px; color: ${G.text2}; font-family: 'DM Mono', monospace; margin-top: 1px; }
-  .key-desc { font-size: 13.5px; color: ${G.text1}; margin-bottom: 20px; line-height: 1.6; }
-  .key-desc a { color: ${G.amber}; text-decoration: none; }
-  .key-desc a:hover { text-decoration: underline; }
-  .key-input {
-    width: 100%; padding: 11px 14px; margin-bottom: 12px;
-    background: ${G.bg2}; border: 1px solid ${G.border};
-    border-radius: 8px; color: ${G.text0};
-    font-size: 13px; font-family: 'DM Mono', monospace;
-    outline: none; transition: border-color 0.15s;
-  }
-  .key-input::placeholder { color: ${G.text3}; }
-  .key-input:focus { border-color: ${G.amberBorder}; }
-  .key-launch {
-    width: 100%; padding: 11px; border-radius: 8px; border: none;
-    font-size: 14px; font-weight: 500; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
-  }
-  .key-launch.active { background: ${G.amber}; color: ${G.bg0}; }
-  .key-launch.active:hover { background: #fbbf24; }
-  .key-launch.inactive { background: ${G.bg3}; color: ${G.text3}; cursor: not-allowed; }
-  .key-note { font-size: 11px; color: ${G.text3}; text-align: center; margin-top: 12px; }
-`;
-
-// ─── System prompt ────────────────────────────────────────────────────────────
-const buildSystem = (tasks, gmailOk, gmailEmail) => `
-You are APEX, a multi-agent productivity assistant. You have two sub-agents:
-- task_agent: manages in-memory tasks
-- email_agent: reads/sends/deletes Gmail via local proxy (${gmailOk ? `connected as ${gmailEmail}` : "NOT connected"})
+// ─── System prompt ──────────────────────────────────────────────────────────
+const buildSystemPrompt = (tasks, gmailConnected, gmailProfile) => `
+You are APEX, a multi-agent productivity assistant. You coordinate two sub-agents:
+- task_agent: manages an in-memory task list
+- email_agent: reads/sends Gmail via a local proxy (${gmailConnected ? `connected as ${gmailProfile}` : "NOT connected — user must connect Gmail first"})
 
 Current tasks: ${JSON.stringify(tasks)}
-Gmail: ${gmailOk ? "connected" : "not connected"}
+Gmail connected: ${gmailConnected}
 
-Respond in valid JSON only — no markdown, no backticks:
+Always respond in valid JSON only — no markdown, no backticks, no prose outside the JSON:
 {
-  "message": "conversational reply",
-  "agent_actions": [{ "agent": "task_agent"|"email_agent", "action": "...", "email_params": { "to":"","subject":"","body":"","query":"","id":"","ids":[] } }],
-  "tasks": [{ "id":"t1","title":"","done":false,"priority":"high"|"medium"|"low","due_date":"YYYY-MM-DD or null" }]
+  "message": "Your conversational reply to the user",
+  "agent_actions": [
+    {
+      "agent": "task_agent" | "email_agent",
+      "action": "CREATE" | "COMPLETE" | "DELETE" | "LIST" | "FETCH_EMAILS" | "SEND_EMAIL" | "READ_EMAIL",
+      "detail": "...",
+      "email_params": { "to": "...", "subject": "...", "body": "...", "query": "...", "id": "..." }
+    }
+  ],
+  "tasks": [ { "id": "t1", "title": "...", "done": false, "priority": "high"|"medium"|"low", "due_date": "YYYY-MM-DD or null" } ]
 }
 
-Task rules: return full updated tasks array when tasks change. Generate ids like "t${Date.now()}".
-Email actions: FETCH_EMAILS (email_params.query), READ_EMAIL (email_params.id), SEND_EMAIL (to/subject/body), DELETE_EMAIL (id), DELETE_BULK (ids[]), MARK_READ (id), MARK_ALL_READ.
-If Gmail not connected and user asks about email, say to connect Gmail.
-Be concise and action-oriented.
+Rules:
+- tasks field: always return FULL updated array when tasks change; omit if unchanged.
+- For FETCH_EMAILS: set action "FETCH_EMAILS" and optionally email_params.query (Gmail search string, e.g. "is:unread").
+- For SEND_EMAIL: set email_params { to, subject, body }.
+- For READ_EMAIL: set email_params { id }.
+- If Gmail is not connected and user asks about email, message should say they need to connect Gmail first (button is in the UI).
+- Never make up email content — only summarize what will be fetched.
+- Generate short unique IDs like "t${Date.now()}" for new tasks.
+- Priority defaults to "medium".
+- Be concise and action-oriented.
 `.trim();
 
-const PRIORITY_COLOR = { high: G.red, medium: G.amber, low: G.green };
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const PRIORITY_COLOR = { high: "#E24B4A", medium: "#EF9F27", low: "#639922" };
 
-function fmtTime(d = new Date()) {
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+function AgentPill({ name }) {
+  const meta = {
+    task_agent: { label: "Task Agent", bg: "#3B6D1118", color: "#3B6D11" },
+    email_agent: { label: "Email Agent", bg: "#99355618", color: "#993556" },
+  }[name] || { label: name, bg: "#88878018", color: "#888780" };
+  return (
+    <span style={{ fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 20, background: meta.bg, color: meta.color, border: `1px solid ${meta.color}28`, whiteSpace: "nowrap" }}>
+      {meta.label}
+    </span>
+  );
 }
 
-function fmtEmailDate(str) {
-  if (!str) return "";
-  try {
-    const d = new Date(str);
-    const now = new Date();
-    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    return d.toLocaleDateString([], { month: "short", day: "numeric" });
-  } catch { return str.slice(0, 10); }
+function StatusDot({ on }) {
+  return <span style={{ width: 7, height: 7, borderRadius: "50%", background: on ? "#639922" : "#888780", display: "inline-block", flexShrink: 0 }} />;
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
+// ─── App ────────────────────────────────────────────────────────────────────
 export default function App() {
-  const envKey = import.meta.env.VITE_GROQ_API_KEY || "";
-  const [apiKey, setApiKey] = useState(envKey);
-  const [keySet, setKeySet] = useState(!!envKey);
-
-  const [view, setView] = useState("chat"); // chat | tasks | emails
+  const [apiKey, setApiKey] = useState("");
+  const [keySet, setKeySet] = useState(false);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [emails, setEmails] = useState([]);
-  const [selectedEmail, setSelectedEmail] = useState(null);
-  const [emailBody, setEmailBody] = useState(null);
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [gmailOk, setGmailOk] = useState(false);
-  const [gmailEmail, setGmailEmail] = useState("");
+  const [activeTab, setActiveTab] = useState("chat");
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailProfile, setGmailProfile] = useState("");
   const [gmailChecking, setGmailChecking] = useState(false);
-
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: "Welcome to APEX. I manage your tasks and Gmail. Connect Gmail using the button below to get started.",
-    agents: [],
-    time: fmtTime()
+    content: "Hi, I'm **APEX** — your multi-agent assistant powered by Groq + Llama 3.3. I manage tasks and Gmail. Connect Gmail below to get started.",
+    agents: []
   }]);
-  const [input, setInput] = useState("");
   const [history, setHistory] = useState([]);
   const bottomRef = useRef(null);
 
   const scroll = () => setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
 
+  // ── Gmail status check ──
   const checkGmail = useCallback(async () => {
     setGmailChecking(true);
     try {
-      const [s, p] = await Promise.all([
-        fetch(`${BACKEND}/auth/status`).then(r => r.json()).catch(() => ({})),
+      const [statusRes, profileRes] = await Promise.all([
+        fetch(`${BACKEND}/auth/status`).then(r => r.json()),
         fetch(`${BACKEND}/profile`).then(r => r.json()).catch(() => ({}))
       ]);
-      setGmailOk(!!s.connected);
-      if (p.email) setGmailEmail(p.email);
-    } catch { setGmailOk(false); }
+      setGmailConnected(!!statusRes.connected);
+      if (profileRes.email) setGmailProfile(profileRes.email);
+    } catch {
+      setGmailConnected(false);
+    }
     setGmailChecking(false);
   }, []);
 
   useEffect(() => { if (keySet) checkGmail(); }, [keySet, checkGmail]);
 
+  // Listen for OAuth popup completing
   useEffect(() => {
-    const h = (e) => { if (e.data === "gmail_connected") checkGmail(); };
-    window.addEventListener("message", h);
-    return () => window.removeEventListener("message", h);
+    const handler = (e) => { if (e.data === "gmail_connected") checkGmail(); };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
   }, [checkGmail]);
 
-  const connectGmail = () => window.open(`${BACKEND}/auth/login`, "gmail_oauth", "width=520,height=620");
-  const disconnectGmail = async () => {
-    await fetch(`${BACKEND}/auth/logout`, { method: "POST" }).catch(() => { });
-    setGmailOk(false); setGmailEmail(""); setEmails([]); setSelectedEmail(null); setEmailBody(null);
+  const connectGmail = () => {
+    window.open(`${BACKEND}/auth/login`, "gmail_oauth", "width=500,height=600");
   };
 
+  const disconnectGmail = async () => {
+    await fetch(`${BACKEND}/auth/logout`, { method: "POST" });
+    setGmailConnected(false);
+    setGmailProfile("");
+    setEmails([]);
+  };
+
+  // ── Execute email_agent actions against the proxy ──
   const runEmailAction = async (action, params = {}) => {
-    if (!gmailOk) return { error: "Gmail not connected" };
+    if (!gmailConnected) return { error: "Gmail not connected" };
     try {
       if (action === "FETCH_EMAILS") {
-        const qs = `?maxResults=15${params.query ? `&query=${encodeURIComponent(params.query)}` : ""}`;
-        const d = await fetch(`${BACKEND}/emails${qs}`).then(r => r.json());
-        if (d.emails) setEmails(d.emails);
-        return d;
+        const qs = params.query ? `?query=${encodeURIComponent(params.query)}&maxResults=10` : "?maxResults=10";
+        const data = await fetch(`${BACKEND}/emails${qs}`).then(r => r.json());
+        if (data.emails) setEmails(data.emails);
+        return data;
       }
       if (action === "READ_EMAIL") {
-        const d = await fetch(`${BACKEND}/emails/${params.id}`).then(r => r.json());
-        if (d.id) {
-          setEmails(p => p.map(e => e.id === d.id ? { ...e, isUnread: false } : e));
-        }
-        return d;
-      }
-      if (action === "MARK_READ") {
-        await fetch(`${BACKEND}/emails/${params.id}/read`, { method: "POST" });
-        setEmails(p => p.map(e => e.id === params.id ? { ...e, isUnread: false } : e));
-        return { ok: true };
-      }
-      if (action === "MARK_ALL_READ") {
-        const d = await fetch(`${BACKEND}/emails/mark-all-read`, { method: "POST" }).then(r => r.json());
-        setEmails(p => p.map(e => ({ ...e, isUnread: false })));
-        return d;
-      }
-      if (action === "DELETE_EMAIL") {
-        await fetch(`${BACKEND}/emails/${params.id}/delete`, { method: "POST" });
-        setEmails(p => p.filter(e => e.id !== params.id));
-        if (selectedEmail?.id === params.id) { setSelectedEmail(null); setEmailBody(null); }
-        return { ok: true };
-      }
-      if (action === "DELETE_BULK") {
-        await fetch(`${BACKEND}/emails/delete-bulk`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: params.ids }) });
-        setEmails(p => p.filter(e => !params.ids.includes(e.id)));
-        return { ok: true };
+        return await fetch(`${BACKEND}/emails/${params.id}`).then(r => r.json());
       }
       if (action === "SEND_EMAIL") {
-        return await fetch(`${BACKEND}/emails/send`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params) }).then(r => r.json());
+        const res = await fetch(`${BACKEND}/emails/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to: params.to, subject: params.subject, body: params.body })
+        }).then(r => r.json());
+        return res;
       }
-    } catch (err) { return { error: err.message }; }
+    } catch (err) {
+      return { error: err.message };
+    }
     return {};
   };
 
-  const openEmail = async (email) => {
-    setSelectedEmail(email);
-    setEmailBody(null);
-    setEmailLoading(true);
-    try {
-      const d = await fetch(`${BACKEND}/emails/${email.id}`).then(r => r.json());
-      setEmailBody(d.body || "(no body)");
-      setEmails(p => p.map(e => e.id === email.id ? { ...e, isUnread: false } : e));
-    } catch { setEmailBody("Failed to load email body."); }
-    setEmailLoading(false);
-  };
-
+  // ── Main send ──
   const send = async () => {
     if (!input.trim() || loading) return;
     const text = input.trim();
     setInput("");
     setLoading(true);
-    const t = fmtTime();
-    setMessages(p => [...p, { role: "user", content: text, agents: [], time: t }]);
+    setMessages(p => [...p, { role: "user", content: text, agents: [] }]);
     scroll();
 
     const newHistory = [...history, { role: "user", content: text }];
+
     try {
       const res = await fetch(GROQ_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify({
           model: MODEL, max_tokens: 1000, temperature: 0.2,
-          messages: [{ role: "system", content: buildSystem(tasks, gmailOk, gmailEmail) }, ...newHistory]
+          messages: [
+            { role: "system", content: buildSystemPrompt(tasks, gmailConnected, gmailProfile) },
+            ...newHistory
+          ]
         })
       });
       const data = await res.json();
@@ -576,45 +171,54 @@ export default function App() {
 
       const raw = data.choices?.[0]?.message?.content || "";
       let parsed = {};
-      try { const m = raw.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch { parsed = { message: raw }; }
+      try {
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (m) parsed = JSON.parse(m[0]);
+      } catch { parsed = { message: raw }; }
 
       if (parsed.tasks !== undefined) setTasks(parsed.tasks);
 
+      // Execute any email_agent actions
+      let emailContext = "";
       const actions = parsed.agent_actions || [];
       const agentNames = [...new Set(actions.map(a => a.agent).filter(Boolean))];
-      let emailCtx = "";
 
       for (const action of actions) {
         if (action.agent === "email_agent") {
           const result = await runEmailAction(action.action, action.email_params || {});
-          if (result?.emails) emailCtx = `\n\nGmail data: ${JSON.stringify(result.emails.slice(0, 8))}`;
-          else if (result?.body) emailCtx = `\n\nEmail body: ${result.body.substring(0, 1000)}`;
-          else if (result?.id) emailCtx = `\n\nEmail sent (id: ${result.id})`;
-          else if (result?.ok) emailCtx = `\n\nAction completed successfully.`;
-          else if (result?.error) emailCtx = `\n\nError: ${result.error}`;
+          if (result?.emails) {
+            emailContext = `\n\nGmail results: ${JSON.stringify(result.emails.slice(0, 5))}`;
+          } else if (result?.body) {
+            emailContext = `\n\nEmail body: ${result.body.substring(0, 800)}`;
+          } else if (result?.id) {
+            emailContext = `\n\nEmail sent successfully (id: ${result.id})`;
+          } else if (result?.error) {
+            emailContext = `\n\nEmail error: ${result.error}`;
+          }
         }
       }
 
-      let finalMsg = parsed.message || raw;
-      if (emailCtx) {
-        const fu = await fetch(GROQ_URL, {
+      // If we got email data back, do a follow-up Groq call to summarize it
+      let finalMessage = parsed.message || raw;
+      if (emailContext) {
+        const followUp = await fetch(GROQ_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
           body: JSON.stringify({
-            model: MODEL, max_tokens: 500, temperature: 0.2,
+            model: MODEL, max_tokens: 600, temperature: 0.2,
             messages: [
-              { role: "system", content: "Summarize the email data concisely in plain text. No JSON, no markdown." },
-              { role: "user", content: `User asked: "${text}"${emailCtx}\n\nSummarize helpfully.` }
+              { role: "system", content: "You are a helpful assistant. Summarize the email data in a friendly, concise way. Respond with plain text only, no JSON." },
+              { role: "user", content: `User asked: "${text}"${emailContext}\n\nProvide a helpful summary.` }
             ]
           })
         }).then(r => r.json());
-        finalMsg = fu.choices?.[0]?.message?.content || finalMsg;
+        finalMessage = followUp.choices?.[0]?.message?.content || finalMessage;
       }
 
-      setMessages(p => [...p, { role: "assistant", content: finalMsg, agents: agentNames, time: fmtTime() }]);
-      setHistory([...newHistory, { role: "assistant", content: finalMsg }]);
+      setMessages(p => [...p, { role: "assistant", content: finalMessage, agents: agentNames }]);
+      setHistory([...newHistory, { role: "assistant", content: finalMessage }]);
     } catch (err) {
-      setMessages(p => [...p, { role: "assistant", content: `Error: ${err.message}`, agents: [], time: fmtTime() }]);
+      setMessages(p => [...p, { role: "assistant", content: `Error: ${err.message}`, agents: [] }]);
     }
     setLoading(false);
     scroll();
@@ -623,252 +227,215 @@ export default function App() {
   const toggleTask = id => setTasks(p => p.map(t => t.id === id ? { ...t, done: !t.done } : t));
   const deleteTask = id => setTasks(p => p.filter(t => t.id !== id));
 
-  const pending = tasks.filter(t => !t.done).length;
-  const unread = emails.filter(e => e.isUnread).length;
-
-  const QUICK = ["Show my tasks", "Check unread emails", "Mark all emails as read", "Add task: review PR, high priority"];
-
-  const NavItem = ({ id, icon, label, badge }) => (
-    <div className={`nav-item${view === id ? " active" : ""}`} onClick={() => setView(id)}>
-      <span className="icon">{icon}</span>
-      <span>{label}</span>
-      {badge > 0 && <span className="nav-badge">{badge}</span>}
-    </div>
+  // ── Tab component ──
+  const Tab = ({ id, label, badge }) => (
+    <button onClick={() => setActiveTab(id)} style={{
+      padding: "6px 16px", border: "none", borderRadius: 20, cursor: "pointer",
+      background: activeTab === id ? "var(--color-text-primary)" : "transparent",
+      color: activeTab === id ? "var(--color-background-primary)" : "var(--color-text-secondary)",
+      fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6
+    }}>
+      {label}
+      {badge > 0 && <span style={{
+        fontSize: 11, borderRadius: 10, padding: "1px 6px", fontWeight: 600,
+        background: activeTab === id ? "rgba(255,255,255,0.22)" : "var(--color-background-tertiary)",
+        color: activeTab === id ? "white" : "var(--color-text-secondary)"
+      }}>{badge}</span>}
+    </button>
   );
 
-  if (!keySet) return (
-    <>
-      <style>{css}</style>
-      <div className="key-screen">
-        <div className="key-card">
-          <div className="key-logo">
-            <div className="key-logo-mark">AP</div>
-            <div className="key-logo-text">
-              <div className="t1">APEX</div>
-              <div className="t2">groq · llama-3.3-70b · gmail</div>
+  // ── API key screen ──
+  if (!keySet) {
+    return (
+      <div style={{ maxWidth: 460, margin: "40px auto", padding: "0 1rem", fontFamily: "var(--font-sans)" }}>
+        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "28px 24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>A</div>
+            <div>
+              <div style={{ fontWeight: 500 }}>APEX</div>
+              <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Groq · Llama 3.3 70B · Gmail proxy</div>
             </div>
           </div>
-          <p className="key-desc">Enter your Groq API key to launch. Get one free at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">console.groq.com</a>.</p>
-          <input className="key-input" type="password" placeholder="gsk_..."
-            value={apiKey} onChange={e => setApiKey(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && apiKey.startsWith("gsk_") && setKeySet(true)} />
-          <button className={`key-launch ${apiKey.startsWith("gsk_") ? "active" : "inactive"}`}
-            onClick={() => setKeySet(true)} disabled={!apiKey.startsWith("gsk_")}>
-            Launch APEX
-          </button>
-          <p className="key-note">Key is used only in this session — sent only to Groq's API.</p>
+          <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginBottom: 16, lineHeight: 1.6 }}>
+            Enter your Groq API key. Get one free at{" "}
+            <a href="https://console.groq.com/keys" style={{ color: "var(--color-text-info)" }}>console.groq.com</a>.
+          </p>
+          <input
+            type="password"
+            placeholder="gsk_..."
+            value={apiKey}
+            onChange={e => setApiKey(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && apiKey.startsWith("gsk_") && setKeySet(true)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", fontSize: 14, boxSizing: "border-box", marginBottom: 12 }}
+          />
+          <button onClick={() => setKeySet(true)} disabled={!apiKey.startsWith("gsk_")} style={{
+            width: "100%", padding: 10, borderRadius: 8, border: "none", fontWeight: 500, fontSize: 14,
+            cursor: apiKey.startsWith("gsk_") ? "pointer" : "not-allowed",
+            background: apiKey.startsWith("gsk_") ? "var(--color-text-primary)" : "var(--color-background-tertiary)",
+            color: apiKey.startsWith("gsk_") ? "var(--color-background-primary)" : "var(--color-text-tertiary)"
+          }}>Launch APEX</button>
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 10, textAlign: "center", lineHeight: 1.5 }}>
+            Your key is used only in this browser session and sent only to Groq's API.
+          </p>
         </div>
       </div>
-    </>
-  );
+    );
+  }
+
+  const pending = tasks.filter(t => !t.done).length;
+  const unread = emails.filter(e => e.isUnread).length;
+  const quickPrompts = ["Show my tasks", "Add task: review PR by tomorrow, high priority", "Check unread emails", "Add task: prepare meeting agenda"];
 
   return (
-    <>
-      <style>{css}</style>
-      <div className="app">
-        {/* Sidebar */}
-        <aside className="sidebar">
-          <div className="logo">
-            <div className="logo-mark">AP</div>
-            <div className="logo-title">APEX</div>
-            <div className="logo-sub">multi-agent assistant</div>
-          </div>
+    <div style={{ maxWidth: 780, margin: "0 auto", fontFamily: "var(--font-sans)", padding: "1rem 0" }}>
 
-          <nav className="nav">
-            <div className="nav-section">
-              <div className="nav-label">Workspace</div>
-              <NavItem id="chat" icon="◈" label="Chat" badge={0} />
-              <NavItem id="tasks" icon="◻" label="Tasks" badge={pending} />
-              <NavItem id="emails" icon="◉" label="Emails" badge={unread} />
-            </div>
-          </nav>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>A</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 500, fontSize: 15 }}>APEX</div>
+          <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Groq · Llama 3.3 70B</div>
+        </div>
 
-          <div className="gmail-status">
-            {gmailChecking
-              ? <div className="spin" />
-              : <div className="status-dot" style={{ background: gmailOk ? G.green : G.text3 }} />
-            }
-            <span className="status-text">{gmailOk ? gmailEmail || "Connected" : "Gmail disconnected"}</span>
-            {gmailOk
-              ? <button className="status-btn btn-disconnect" onClick={disconnectGmail}>out</button>
-              : <button className="status-btn btn-connect" onClick={connectGmail}>connect</button>
-            }
-          </div>
-        </aside>
-
-        {/* Main */}
-        <main className="main">
-          <div className="topbar">
-            <span className="topbar-title">
-              {view === "chat" && "Chat"}
-              {view === "tasks" && "Tasks"}
-              {view === "emails" && "Emails"}
-            </span>
-            <span className="topbar-meta">
-              {view === "tasks" && `${pending} pending · ${tasks.filter(t => t.done).length} done`}
-              {view === "emails" && `${emails.length} loaded · ${unread} unread`}
-              {view === "chat" && "groq · llama-3.3-70b"}
-            </span>
-          </div>
-
-          <div className="content">
-            {/* ── Chat ── */}
-            {view === "chat" && (
-              <div className="chat-wrap">
-                <div className="messages">
-                  {messages.map((m, i) => (
-                    <div key={i} className={`msg ${m.role}`}>
-                      {m.agents?.length > 0 && (
-                        <div className="msg-agent-row">
-                          {[...new Set(m.agents)].map((a, j) => (
-                            <span key={j} className={`agent-chip ${a === "task_agent" ? "chip-task" : "chip-email"}`}>
-                              {a === "task_agent" ? "task agent" : "email agent"}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="msg-bubble">
-                        {m.content.split(/\*\*(.*?)\*\*/g).map((p, j) => j % 2 === 1 ? <strong key={j}>{p}</strong> : p)}
-                      </div>
-                      <div className="msg-time">{m.time}</div>
-                    </div>
-                  ))}
-                  {loading && (
-                    <div className="msg assistant">
-                      <div className="typing">
-                        <div className="dots">
-                          <div className="dot" /><div className="dot" /><div className="dot" />
-                        </div>
-                        <span>agents working</span>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={bottomRef} />
-                </div>
-
-                <div className="chat-footer">
-                  <div className="quick-prompts">
-                    {QUICK.map((q, i) => (
-                      <button key={i} className="qp" onClick={() => setInput(q)}>{q}</button>
-                    ))}
-                  </div>
-                  <div className="input-row">
-                    <input className="chat-input" value={input} onChange={e => setInput(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && send()}
-                      placeholder="Ask APEX anything — tasks, emails, actions..." />
-                    <button className="send-btn" onClick={send} disabled={loading || !input.trim()}>Send →</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── Tasks ── */}
-            {view === "tasks" && (
-              <div className="panel">
-                <div className="panel-header">
-                  <span style={{ fontSize: 13, color: G.text2, fontFamily: "'DM Mono', monospace" }}>in-memory · resets on reload</span>
-                  <button className="add-btn" onClick={() => { setView("chat"); setInput("Add a task: "); }}>+ add via chat</button>
-                </div>
-                <div className="stat-row">
-                  {[["pending", pending, G.amber], ["done", tasks.filter(t => t.done).length, G.green], ["total", tasks.length, G.text1]].map(([l, n, c]) => (
-                    <div className="stat-card" key={l}>
-                      <div className="stat-num" style={{ color: c }}>{n}</div>
-                      <div className="stat-lbl">{l}</div>
-                    </div>
-                  ))}
-                </div>
-                {tasks.length === 0 ? (
-                  <div className="empty-state">
-                    <div className="em-icon">◻</div>
-                    no tasks yet — ask APEX in chat
-                  </div>
-                ) : (
-                  <div className="task-list">
-                    {tasks.map(t => (
-                      <div key={t.id} className={`task-item${t.done ? " done" : ""}`}>
-                        <input type="checkbox" className="task-cb" checked={t.done} onChange={() => toggleTask(t.id)} />
-                        <div className="prio-dot" style={{ background: PRIORITY_COLOR[t.priority] || PRIORITY_COLOR.medium }} />
-                        <span className="task-title">{t.title}</span>
-                        {t.due_date && <span className="task-due">{t.due_date}</span>}
-                        <span className={`prio-badge prio-${t.priority || "medium"}`}>{t.priority || "medium"}</span>
-                        <button className="del-btn" onClick={() => deleteTask(t.id)}>×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Emails ── */}
-            {view === "emails" && (
-              <div className="email-layout">
-                <div className="email-list">
-                  <div className="email-toolbar">
-                    <button className="toolbar-btn" onClick={() => { setView("chat"); setInput("Check my emails"); }}>fetch</button>
-                    <button className="toolbar-btn" onClick={async () => { await runEmailAction("MARK_ALL_READ"); }}>mark all read</button>
-                    {selectedEmail && (
-                      <button className="toolbar-btn danger" onClick={async () => { await runEmailAction("DELETE_EMAIL", { id: selectedEmail.id }); }}>delete</button>
-                    )}
-                  </div>
-                  {!gmailOk ? (
-                    <div className="empty-state" style={{ padding: "40px 20px" }}>
-                      <div className="em-icon">◉</div>
-                      Gmail not connected
-                      <button className="add-btn" style={{ marginTop: 12 }} onClick={connectGmail}>connect gmail</button>
-                    </div>
-                  ) : emails.length === 0 ? (
-                    <div className="empty-state" style={{ padding: "40px 20px" }}>
-                      <div className="em-icon">◉</div>
-                      no emails loaded<br />
-                      <span style={{ fontSize: 11, marginTop: 6, display: "block" }}>ask APEX to fetch emails in chat</span>
-                    </div>
-                  ) : (
-                    emails.map(em => (
-                      <div key={em.id} className={`email-item${em.isUnread ? " unread" : ""}${selectedEmail?.id === em.id ? " selected" : ""}`}
-                        onClick={() => openEmail(em)}>
-                        {em.isUnread && <div className="unread-bar" />}
-                        <div className="email-from">
-                          <span>{em.from?.replace(/<.*>/, "").trim() || em.from}</span>
-                          <span className="email-date-small">{fmtEmailDate(em.date)}</span>
-                        </div>
-                        <div className="email-subject">{em.subject}</div>
-                        <div className="email-snippet">{em.snippet}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {selectedEmail ? (
-                  <div className="email-detail">
-                    <div className="email-detail-header">
-                      <div className="detail-subject">{selectedEmail.subject}</div>
-                      <div className="detail-meta">
-                        <div className="detail-meta-row"><span className="detail-meta-label">from</span><span className="detail-meta-val">{selectedEmail.from}</span></div>
-                        <div className="detail-meta-row"><span className="detail-meta-label">to</span><span className="detail-meta-val">{selectedEmail.to}</span></div>
-                        <div className="detail-meta-row"><span className="detail-meta-label">date</span><span className="detail-meta-val">{selectedEmail.date}</span></div>
-                      </div>
-                    </div>
-                    <div className="detail-actions">
-                      <button className="action-btn reply" onClick={() => { setView("chat"); setInput(`Reply to the email from ${selectedEmail.from}: `); }}>↩ reply via chat</button>
-                      <button className="action-btn" onClick={() => runEmailAction("MARK_READ", { id: selectedEmail.id })}>mark read</button>
-                      <button className="action-btn del" onClick={() => runEmailAction("DELETE_EMAIL", { id: selectedEmail.id })}>trash</button>
-                    </div>
-                    {emailLoading
-                      ? <div style={{ display: "flex", gap: 8, color: G.text2, fontSize: 13 }}><div className="spin" /> Loading...</div>
-                      : <div className="detail-body">{emailBody}</div>
-                    }
-                  </div>
-                ) : (
-                  <div className="no-email-selected">
-                    <span style={{ fontSize: 24 }}>◉</span>
-                    select an email to read
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </main>
+        {/* Gmail connection status */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <StatusDot on={gmailConnected} />
+          <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
+            {gmailChecking ? "Checking..." : gmailConnected ? gmailProfile || "Gmail connected" : "Gmail disconnected"}
+          </span>
+          {gmailConnected
+            ? <button onClick={disconnectGmail} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, border: "0.5px solid var(--color-border-secondary)", background: "transparent", color: "var(--color-text-tertiary)", cursor: "pointer" }}>Disconnect</button>
+            : <button onClick={connectGmail} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, border: "0.5px solid var(--color-border-info)", background: "var(--color-background-info)", color: "var(--color-text-info)", cursor: "pointer", fontWeight: 500 }}>Connect Gmail</button>
+          }
+        </div>
       </div>
-    </>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 4, padding: 4, background: "var(--color-background-secondary)", borderRadius: 24, marginBottom: 16, width: "fit-content" }}>
+        <Tab id="chat" label="Chat" badge={0} />
+        <Tab id="tasks" label="Tasks" badge={pending} />
+        <Tab id="emails" label="Emails" badge={unread} />
+      </div>
+
+      {/* ── Chat tab ── */}
+      {activeTab === "chat" && (
+        <>
+          <div style={{ border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, height: 380, overflowY: "auto", padding: 16, marginBottom: 10, background: "var(--color-background-primary)" }}>
+            {messages.map((m, i) => (
+              <div key={i} style={{ marginBottom: 14, display: "flex", flexDirection: "column", alignItems: m.role === "user" ? "flex-end" : "flex-start" }}>
+                {m.agents?.length > 0 && (
+                  <div style={{ display: "flex", gap: 4, marginBottom: 4, flexWrap: "wrap" }}>
+                    {[...new Set(m.agents)].map((a, j) => <AgentPill key={j} name={a} />)}
+                  </div>
+                )}
+                <div style={{
+                  maxWidth: "85%", padding: "9px 14px", fontSize: 14, lineHeight: 1.6,
+                  borderRadius: m.role === "user" ? "12px 12px 4px 12px" : "12px 12px 12px 4px",
+                  background: m.role === "user" ? "var(--color-text-primary)" : "var(--color-background-secondary)",
+                  color: m.role === "user" ? "var(--color-background-primary)" : "var(--color-text-primary)"
+                }}>
+                  {m.content.split(/\*\*(.*?)\*\*/g).map((p, j) => j % 2 === 1 ? <strong key={j}>{p}</strong> : p)}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--color-text-tertiary)", fontSize: 13 }}>
+                {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", display: "inline-block", animation: `blink 1.2s ${i * 0.2}s infinite` }} />)}
+                <span style={{ marginLeft: 4 }}>Agents working...</span>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+            {quickPrompts.map((p, i) => (
+              <button key={i} onClick={() => setInput(p)} style={{ fontSize: 12, padding: "4px 12px", borderRadius: 20, border: "0.5px solid var(--color-border-secondary)", background: "transparent", color: "var(--color-text-secondary)", cursor: "pointer" }}>
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
+              placeholder="Manage tasks, check Gmail, draft emails..."
+              style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-primary)", color: "var(--color-text-primary)", fontSize: 14 }}
+            />
+            <button onClick={send} disabled={loading || !input.trim()} style={{
+              padding: "10px 20px", borderRadius: 8, border: "none", fontWeight: 500, fontSize: 14,
+              cursor: loading || !input.trim() ? "not-allowed" : "pointer",
+              background: loading || !input.trim() ? "var(--color-background-tertiary)" : "var(--color-text-primary)",
+              color: loading || !input.trim() ? "var(--color-text-tertiary)" : "var(--color-background-primary)"
+            }}>Send</button>
+          </div>
+        </>
+      )}
+
+      {/* ── Tasks tab ── */}
+      {activeTab === "tasks" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ display: "flex", gap: 10 }}>
+              {[["Pending", pending, "#EF9F27"], ["Done", tasks.filter(t => t.done).length, "#639922"]].map(([l, c, color]) => (
+                <div key={l} style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: "8px 16px", textAlign: "center" }}>
+                  <div style={{ fontSize: 22, fontWeight: 500, color }}>{c}</div>
+                  <div style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>{l}</div>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => { setActiveTab("chat"); setInput("Add a task: "); }} style={{ fontSize: 12, padding: "6px 14px", borderRadius: 20, border: "0.5px solid var(--color-border-secondary)", background: "transparent", color: "var(--color-text-secondary)", cursor: "pointer" }}>
+              + Add via chat
+            </button>
+          </div>
+          {tasks.length === 0
+            ? <div style={{ textAlign: "center", padding: "50px 0", color: "var(--color-text-tertiary)", fontSize: 14 }}>No tasks yet — ask APEX in the chat tab.</div>
+            : tasks.map(t => (
+              <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", marginBottom: 6, border: "0.5px solid var(--color-border-tertiary)", borderRadius: 8, background: "var(--color-background-primary)", opacity: t.done ? 0.5 : 1, transition: "opacity 0.2s" }}>
+                <input type="checkbox" checked={t.done} onChange={() => toggleTask(t.id)} style={{ cursor: "pointer", flexShrink: 0 }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: PRIORITY_COLOR[t.priority] || PRIORITY_COLOR.medium, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 14, textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
+                {t.due_date && <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>{t.due_date}</span>}
+                <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: (PRIORITY_COLOR[t.priority] || PRIORITY_COLOR.medium) + "18", color: PRIORITY_COLOR[t.priority] || PRIORITY_COLOR.medium }}>{t.priority || "medium"}</span>
+                <button onClick={() => deleteTask(t.id)} style={{ border: "none", background: "none", color: "var(--color-text-tertiary)", cursor: "pointer", fontSize: 17, padding: "0 2px", lineHeight: 1 }}>×</button>
+              </div>
+            ))
+          }
+        </div>
+      )}
+
+      {/* ── Emails tab ── */}
+      {activeTab === "emails" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>
+              {gmailConnected ? `${emails.length} loaded · ${unread} unread` : "Gmail not connected"}
+            </div>
+            <button onClick={() => { setActiveTab("chat"); setInput("Check my unread emails"); }} style={{ fontSize: 12, padding: "6px 14px", borderRadius: 20, border: "0.5px solid var(--color-border-secondary)", background: "transparent", color: "var(--color-text-secondary)", cursor: "pointer" }}>
+              Fetch via chat
+            </button>
+          </div>
+          {!gmailConnected ? (
+            <div style={{ textAlign: "center", padding: "40px 0" }}>
+              <div style={{ fontSize: 14, color: "var(--color-text-secondary)", marginBottom: 12 }}>Connect Gmail to read and send emails.</div>
+              <button onClick={connectGmail} style={{ fontSize: 13, padding: "8px 20px", borderRadius: 8, border: "0.5px solid var(--color-border-info)", background: "var(--color-background-info)", color: "var(--color-text-info)", cursor: "pointer", fontWeight: 500 }}>Connect Gmail</button>
+            </div>
+          ) : emails.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "50px 0", color: "var(--color-text-tertiary)", fontSize: 14 }}>No emails loaded. Ask APEX to "check my emails" in chat.</div>
+          ) : (
+            emails.map((em, i) => (
+              <div key={i} style={{ padding: "10px 14px", marginBottom: 6, border: "0.5px solid var(--color-border-tertiary)", borderRadius: 8, background: "var(--color-background-primary)", borderLeft: em.isUnread ? "3px solid #185FA5" : "0.5px solid var(--color-border-tertiary)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                  <span style={{ fontWeight: em.isUnread ? 500 : 400, fontSize: 14 }}>{em.subject}</span>
+                  <span style={{ fontSize: 11, color: "var(--color-text-tertiary)", whiteSpace: "nowrap", marginLeft: 12 }}>{em.date?.slice(0, 16)}</span>
+                </div>
+                <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginBottom: 4 }}>{em.from}</div>
+                <div style={{ fontSize: 12, color: "var(--color-text-tertiary)", lineHeight: 1.4 }}>{em.snippet}</div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      <style>{`@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}`}</style>
+    </div>
   );
 }
