@@ -72,7 +72,7 @@ export default function App() {
   const [gmailChecking, setGmailChecking] = useState(false);
   const [messages, setMessages] = useState([{
     role: "assistant",
-    content: "Hi, I'm **APEX** — your multi-agent assistant powered by Groq + Llama 3.3. I manage tasks and Gmail. Connect Gmail below to get started.",
+    content: "Hi, I'm **APEX** — your multi-agent assistant powered by Gemini. I manage tasks and Gmail. Connect Gmail below to get started.",
     agents: []
   }]);
   const [history, setHistory] = useState([]);
@@ -250,7 +250,8 @@ export default function App() {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>AP</div>
             <div>
               <div style={{ fontWeight: 500 }}>APEX</div>
-              <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Groq · Llama 3.3 70B · Gmail proxy</div>
+              {/* ── CHANGED ── */}
+              <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Gemini · gemini-2.0-flash · Gmail proxy</div>
             </div>
           </div>
           <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginBottom: 16, lineHeight: 1.6 }}>
@@ -291,7 +292,8 @@ export default function App() {
         <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--color-text-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-background-primary)", fontWeight: 700, fontSize: 15 }}>AP</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 500, fontSize: 15 }}>APEX</div>
-          <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Groq · Llama 3.3 70B</div>
+          {/* ── CHANGED ── */}
+          <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Gemini · gemini-2.0-flash</div>
         </div>
 
         {/* Gmail connection status */}
