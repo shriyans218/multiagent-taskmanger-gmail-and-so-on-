@@ -4,6 +4,7 @@ const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = "llama-3.3-70b-versatile";
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
+
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const G = {
   bg0: "#0c0c0e",
