@@ -526,7 +526,7 @@ export default function App() {
         <div className="key-card">
           <div className="key-logo">
             <div className="key-mark">AP</div>
-            <div><div className="key-t1">APEX</div><div className="key-t2">groq · mongo · gmail · calendar</div></div>
+            <div><div className="key-t1">APEX</div><div className="key-t2">gemini · mongo · gmail · calendar</div></div>
           </div>
           <p className="key-desc">Enter your Groq API key. Get one free at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">console.groq.com</a>.</p>
           <input className="key-input" type="password" placeholder="gsk_..."
@@ -582,7 +582,7 @@ export default function App() {
               {view === "notes" && `${notes.length} notes · mongodb`}
               {view === "emails" && `${emails.length} loaded · ${unread} unread`}
               {view === "calendar" && `${events.length} events · ${calDays}d window`}
-              {view === "chat" && "groq · llama-3.3-70b"}
+              {view === "chat" && "gemini · gemini-2.0-flash"}
             </span>
           </div>
 
