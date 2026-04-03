@@ -457,7 +457,7 @@ export default function App() {
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
 
-      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const raw = data.choices?.[0]?.message?.content || "";
       let parsed = {};
       try {
   const clean = raw.replace(/```json|```/g, "").trim();
@@ -489,7 +489,7 @@ export default function App() {
             { role:"user", content:`User asked: "${text}"${extraCtx}\n\nSummarize helpfully.` }
           ]})
         }).then(r => r.json());
-        finalMsg = fu.candidates?.[0]?.content?.parts?.[0]?.text || finalMsg;
+        finalMsg = fu.choices?.[0]?.message?.content || finalMsg;
       }
 
       setMessages(p => [...p, { role:"assistant", content: finalMsg, agents: agentNames, time: fmtTime() }]);
