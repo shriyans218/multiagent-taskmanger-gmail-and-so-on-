@@ -463,10 +463,13 @@ export default function App() {
         const clean = raw.replace(/```json|```/g, "").trim();
         const m = clean.match(/\{[\s\S]*\}/);
         if (m) {
-          const cleanedStr = m[0]
+          const fixedStr = m[0]
+            .replace(/"t"\s*\+\s*Date\.now\(\)\.toString\(\)/g, `"t${Date.now()}"`)
             .replace(/"t"\s*\+\s*Date\.now\(\)/g, `"t${Date.now()}"`)
+            .replace(/"n"\s*\+\s*Date\.now\(\)\.toString\(\)/g, `"n${Date.now()}"`)
+            .replace(/"n"\s*\+\s*Date\.now\(\)/g, `"n${Date.now()}"`)
             .replace(/new Date\([^)]*\)\.toISOString\(\)/g, `"${new Date(Date.now() + 86400000).toISOString()}"`);
-          parsed = JSON.parse(cleanedStr);
+          parsed = JSON.parse(fixedStr);
           if (!parsed.message) parsed.message = "Done!";
         } else {
           parsed = { message: raw };
