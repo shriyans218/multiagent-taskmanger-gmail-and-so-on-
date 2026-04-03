@@ -199,6 +199,13 @@ Respond ONLY in valid JSON — no markdown, no backticks:
 }
 
 Rules:
+- NEVER auto-create a task immediately. When user says "add task X", first respond with message asking "Got it! Should I also add this to your Google Calendar?" and set agent_actions to only task_agent CREATE.
+- ONLY create the task (call task_agent CREATE) after the user confirms they want it added — if they say "yes add task" or similar confirmation.
+- If user says "yes" or "yes add to calendar" after you asked about calendar — then do BOTH: task_agent CREATE and calendar_agent CREATE_EVENT in the same response.
+- If user says "no" or "just the task" — then only do task_agent CREATE.
+- When user confirms calendar, ask for date and time before creating if not already provided. Respond with just a message asking "What date and time?" and no agent_actions.
+- calendar_agent CREATE_EVENT start must always be a full ISO string like "2026-04-09T10:00:00+05:30", never relative words like "tomorrow".
+- To remove a task from calendar: use calendar_agent DELETE_EVENT with the event id. Ask user to confirm before deleting.
 - task_agent CREATE params: { id, title, priority, due_date }
 - task_agent UPDATE params: { id, done?, title?, priority?, due_date? }
 - task_agent DELETE params: { id }
@@ -214,8 +221,7 @@ Rules:
 - notes_agent DELETE_NOTE params: { id }
 - Generate short ids: "t"+Date.now() for tasks, "n"+Date.now() for notes
 - If Google not connected and user asks email/calendar, say to connect first
-- Be concise and action-oriented
-`.trim();
+- Be concise and conversational — ask one question at a time
 
 const PRIO_COLOR = { high: G.red, medium: G.amber, low: G.green };
 const fmtTime = (d = new Date()) => d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
