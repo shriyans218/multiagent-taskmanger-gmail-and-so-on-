@@ -457,9 +457,14 @@ export default function App() {
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
 
-      const raw = data.choices?.[0]?.message?.content || "";
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       let parsed = {};
-      try { const m = raw.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch { parsed = { message: raw }; }
+      try {
+  const clean = raw.replace(/```json|```/g, "").trim();
+  const m = clean.match(/\{[\s\S]*\}/);
+  if (m) parsed = JSON.parse(m[0]);
+  else parsed = { message: raw };
+} catch { parsed = { message: raw }; }
 
       const actions = parsed.agent_actions || [];
       const agentNames = [...new Set(actions.map(a => a.agent).filter(Boolean))];
@@ -484,7 +489,7 @@ export default function App() {
             { role:"user", content:`User asked: "${text}"${extraCtx}\n\nSummarize helpfully.` }
           ]})
         }).then(r => r.json());
-        finalMsg = fu.choices?.[0]?.message?.content || finalMsg;
+        finalMsg = fu.candidates?.[0]?.content?.parts?.[0]?.text || finalMsg;
       }
 
       setMessages(p => [...p, { role:"assistant", content: finalMsg, agents: agentNames, time: fmtTime() }]);
