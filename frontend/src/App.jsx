@@ -457,14 +457,21 @@ export default function App() {
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
 
-      const raw = data.choices?.[0]?.message?.content || "";
+     const raw = data.choices?.[0]?.message?.content || "";
       let parsed = {};
       try {
-  const clean = raw.replace(/```json|```/g, "").trim();
-  const m = clean.match(/\{[\s\S]*\}/);
-  if (m) parsed = JSON.parse(m[0]);
-  else parsed = { message: raw };
-} catch { parsed = { message: raw }; }
+        const clean = raw.replace(/```json|```/g, "").trim();
+        const m = clean.match(/\{[\s\S]*\}/);
+        if (m) {
+          const cleanedStr = m[0]
+            .replace(/"t"\s*\+\s*Date\.now\(\)/g, `"t${Date.now()}"`)
+            .replace(/new Date\([^)]*\)\.toISOString\(\)/g, `"${new Date(Date.now() + 86400000).toISOString()}"`);
+          parsed = JSON.parse(cleanedStr);
+          if (!parsed.message) parsed.message = "Done!";
+        } else {
+          parsed = { message: raw };
+        }
+      } catch { parsed = { message: raw }; }
 
       const actions = parsed.agent_actions || [];
       const agentNames = [...new Set(actions.map(a => a.agent).filter(Boolean))];
