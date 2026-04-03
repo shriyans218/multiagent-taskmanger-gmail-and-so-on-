@@ -222,6 +222,7 @@ Rules:
 - Generate short ids: "t"+Date.now() for tasks, "n"+Date.now() for notes
 - If Google not connected and user asks email/calendar, say to connect first
 - Be concise and conversational — ask one question at a time
+`.trim();
 
 const PRIO_COLOR = { high: G.red, medium: G.amber, low: G.green };
 const fmtTime = (d = new Date()) => d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
