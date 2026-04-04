@@ -550,7 +550,10 @@ export default function App() {
         else if (result?.body) extraCtx = `\n\nEmail body: ${result.body.substring(0,1000)}`;
         else if (result?.events?.length) extraCtx = `\n\nCalendar events: ${JSON.stringify(result.events)}`;
         else if (result?.id && action.action === "SEND_EMAIL") extraCtx = `\n\nEmail sent successfully.`;
-        else if (result?.error) extraCtx = `\n\nError: ${result.error}`;
+        else if (result?.error && !result.error.includes("duplicate key") && !result.error.includes("E11000"))
+        {
+           extraCtx = `\n\nError: ${result.error}`;
+        }
       }
 
       let finalMsg = parsed.message || raw;
