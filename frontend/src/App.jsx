@@ -231,6 +231,7 @@ INTELLIGENCE RULES — READ ALL BEFORE RESPONDING:
 - start datetime MUST be ISO format: "2026-04-05T10:00:00+05:30". Never use "tomorrow" or "next week".
 - "remove from calendar" / "delete event X" → get events first if no id, find match, confirm "Should I remove [event name]?" then DELETE_EVENT.
 - If Google not connected → say "Please connect your Google account using the connect button in the sidebar."
+- ALWAYS include +05:30 timezone offset in ISO strings for IST. Example: "2026-04-04T21:00:00+05:30" means 9pm IST. Never use Z (UTC) suffix.
 
 ═══ EMAIL RULES ═══
 - "check emails" / "show inbox" → FETCH_EMAILS, maxResults 10.
@@ -537,7 +538,7 @@ export default function App() {
             .replace(/"t"\s*\+\s*Date\.now\(\)/g, `"t${Date.now()}"`)
             .replace(/"n"\s*\+\s*Date\.now\(\)\.toString\(\)/g, `"n${Date.now()}"`)
             .replace(/"n"\s*\+\s*Date\.now\(\)/g, `"n${Date.now()}"`)
-            .replace(/new Date\([^)]*\)\.toISOString\(\)/g, `"${new Date(Date.now() + 86400000).toISOString()}"`);
+            .replace(/new Date\([^)]*\)\.toISOString\(\)/g, `"${new Date(Date.now() + 86400000).toISOString().replace('Z', '+05:30')}"`);
           parsed = JSON.parse(fixedStr);
           if (!parsed.message) parsed.message = "Done!";
         } else {
