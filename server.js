@@ -266,8 +266,13 @@ app.post("/calendar/events", async (req, res) => {
         summary: title,
         description: description || "",
         location: location || "",
-        start: { dateTime: start, timeZone: "Asia/Kolkata" },
-        end: { dateTime: endTime, timeZone: "Asia/Kolkata" },
+        const fixTZ = (dt) => {
+  if (!dt) return dt;
+  if (dt.endsWith("Z") || dt.includes("+")) return dt;
+  return dt + "+05:30";
+};
+start: { dateTime: fixTZ(start), timeZone: "Asia/Kolkata" },
+end: { dateTime: fixTZ(endTime), timeZone: "Asia/Kolkata" },
       },
     });
     res.json({ id: event.data.id, title: event.data.summary, start: event.data.start?.dateTime });
