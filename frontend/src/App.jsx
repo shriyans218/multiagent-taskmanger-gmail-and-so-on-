@@ -213,9 +213,12 @@ INTELLIGENCE RULES — READ ALL BEFORE RESPONDING:
 - "add a task: X on [date] at [time]" (has title + date + time) → CREATE task X + ask "Should I also add this to Google Calendar?" — do NOT ask for date/time again.
 - "add a task: X on [date]" (has title + date, no time) → CREATE task X + ask "Should I add this to your calendar? If yes, what time?"
 - User says "yes" to calendar + date+time already known → call ONLY calendar_agent CREATE_EVENT. The task was already created. Do NOT call task_agent CREATE again under any circumstances.
+- Once calendar_agent CREATE_EVENT succeeds → that event is DONE. Do not create it again regardless of what user says next.
 - User says "yes" to calendar + date known but no time → ask "What time?" only. No agent_actions. Task already exists, do not touch it.
 - User says "yes" to calendar + nothing known → ask "When should I schedule this?" only. No agent_actions. Task already exists, do not touch it.
 - GOLDEN RULE: task_agent CREATE is called EXACTLY ONCE per task — when the user first gives the title. Every subsequent message in that conversation about the same task must NEVER call task_agent CREATE again.
+- GOLDEN RULE 2: calendar_agent CREATE_EVENT is called EXACTLY ONCE per task per conversation. If a calendar event was already created in a previous turn, NEVER create it again. "ok", "thanks", "cool", "got it" after a calendar event is created = acknowledgement only. No agent_actions at all.
+- After saying "Task added to calendar" or confirming calendar creation — the conversation for that task is COMPLETE. Any follow up like "ok"/"thanks"/"great" must return empty agent_actions [].
 - User says "no" / "just the task" / "skip calendar" → task already created, confirm. Done.
 - User says "yes"/"yup"/"sure"/"go ahead" → treat as confirmation of last question. Act on it.
 - User says "no"/"nope"/"skip" → reject last suggestion. Move on.
