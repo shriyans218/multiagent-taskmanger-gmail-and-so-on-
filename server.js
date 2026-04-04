@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -253,16 +252,12 @@ app.post("/calendar/events", async (req, res) => {
     const cal = getCalendar();
     const { title, start, end, description, location } = req.body;
     if (!title || !start) return res.status(400).json({ error: "title and start are required" });
-
     const endTime = end || new Date(new Date(start).getTime() + 3600000).toISOString();
-
-    
     const fixTZ = (dt) => {
       if (!dt) return dt;
       if (dt.endsWith("Z") || dt.includes("+")) return dt;
       return dt + "+05:30";
     };
-
     const event = await cal.events.insert({
       calendarId: "primary",
       requestBody: {
@@ -273,7 +268,6 @@ app.post("/calendar/events", async (req, res) => {
         end: { dateTime: fixTZ(endTime), timeZone: "Asia/Kolkata" },
       },
     });
-
     res.json({ id: event.data.id, title: event.data.summary, start: event.data.start?.dateTime });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -286,9 +280,102 @@ app.delete("/calendar/events/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// EMAILS — Gmail API
+// ═══════════════════════════════════════════════════════════════════════════════
+
+app.get("/emails", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    const query = req.query.query || "";
+    const maxResults = parseInt(req.query.maxResults) || 15;
+    const list = await gmail.users.messages.list({ userId: "me", q: query, maxResults });
+    const ids = (list.data.messages || []).map(m => m.id);
+    const emails = await Promise.all(ids.map(async id => {
+      const msg = await gmail.users.messages.get({ userId: "me", id, format: "metadata", metadataHeaders: ["From","To","Subject","Date"] });
+      const h = msg.data.payload?.headers || [];
+      return {
+        id, snippet: msg.data.snippet,
+        from: getHeader(h, "From"), to: getHeader(h, "To"),
+        subject: getHeader(h, "Subject"), date: getHeader(h, "Date"),
+        isUnread: msg.data.labelIds?.includes("UNREAD"),
+      };
+    }));
+    res.json({ emails });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get("/emails/:id", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    const msg = await gmail.users.messages.get({ userId: "me", id: req.params.id, format: "full" });
+    const h = msg.data.payload?.headers || [];
+    await gmail.users.messages.modify({ userId: "me", id: req.params.id, requestBody: { removeLabelIds: ["UNREAD"] } });
+    res.json({
+      id: req.params.id,
+      from: getHeader(h, "From"), to: getHeader(h, "To"),
+      subject: getHeader(h, "Subject"), date: getHeader(h, "Date"),
+      body: extractBody(msg.data.payload),
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/emails/:id/read", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    await gmail.users.messages.modify({ userId: "me", id: req.params.id, requestBody: { removeLabelIds: ["UNREAD"] } });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/emails/:id/unread", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    await gmail.users.messages.modify({ userId: "me", id: req.params.id, requestBody: { addLabelIds: ["UNREAD"] } });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/emails/mark-all-read", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    const list = await gmail.users.messages.list({ userId: "me", q: "is:unread", maxResults: 50 });
+    const ids = (list.data.messages || []).map(m => m.id);
+    await Promise.all(ids.map(id => gmail.users.messages.modify({ userId: "me", id, requestBody: { removeLabelIds: ["UNREAD"] } })));
+    res.json({ ok: true, marked: ids.length });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/emails/:id/delete", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    await gmail.users.messages.trash({ userId: "me", id: req.params.id });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/emails/delete-bulk", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    const { ids } = req.body;
+    if (!ids?.length) return res.status(400).json({ error: "ids array required" });
+    await Promise.all(ids.map(id => gmail.users.messages.trash({ userId: "me", id })));
+    res.json({ ok: true, deleted: ids.length });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post("/emails/send", async (req, res) => {
+  try {
+    const gmail = getGmail();
+    const { to, subject, body, replyToMessageId } = req.body;
+    const raw = makeRawEmail({ to, subject, body, replyToMessageId });
+    const sent = await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+    res.json({ id: sent.data.id });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ─── START ───────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`\nAPEX backend running at http://localhost:${PORT}`);
 });
-
