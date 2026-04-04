@@ -403,7 +403,9 @@ export default function App() {
     try {
       if (agent === "task_agent") {
         if (action === "CREATE") {
-          const d = await api("POST", "/tasks", { id: params.id || `t${Date.now()}`, title: params.title, priority: params.priority || "medium", due_date: params.due_date || null });
+  const existingTask = tasks.find(t => t.title?.toLowerCase() === params.title?.toLowerCase());
+  if (existingTask) return { tasks, skipped: true };
+  const d = await api("POST", "/tasks", { id: params.id || `t${Date.now()}`, title: params.title, priority: params.priority || "medium", due_date: params.due_date || null });
           if (d.tasks) setTasks(d.tasks);
           return d;
         }
@@ -543,7 +545,13 @@ export default function App() {
         }
       } catch { parsed = { message: raw }; }
 
-      const actions = parsed.agent_actions || [];
+      const seenActions = new Set();
+const actions = (parsed.agent_actions || []).filter(a => {
+  const key = `${a.agent}:${a.action}`;
+  if (seenActions.has(key)) return false;
+  seenActions.add(key);
+  return true;
+});
       const agentNames = [...new Set(actions.map(a => a.agent).filter(Boolean))];
       let extraCtx = "";
 
